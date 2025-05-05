@@ -3,15 +3,32 @@ from django.http import HttpRequest
 from lists.views import home_page
 from lists.models import Item
 
+# Good unit testing practice says that each test should only test one thing
 class HomePageTest(TestCase):
     def test_uses_home_template(self):
         response = self.client.get('/')
         self.assertTemplateUsed(response,"home.html")
         
+    def test_displays_all_list_items(self):
+        Item.objects.create(text="item111")
+        Item.objects.create(text="item222")
+        response = self.client.get("/")
+        self.assertContains(response,"item111")
+        self.assertContains(response,"item222")
+        
     def test_can_save_a_POST_request(self):
-        response = self.client.post("/",data={'item_text':'A new list item'})
-        self.assertContains(response,"A new list item")
-        self.assertTemplateUsed(response,'home.html')
+        self.client.post("/",data={'item_text':'A new list item'})
+        self.assertEqual(Item.objects.count(),1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text,"A new list item")
+        
+    def test_redirects_after_POST(self):
+        response = self.client.post("/",data={"item_text":"A new list item"})
+        self.assertRedirects(response,"/")
+    
+    def test_only_saves_items_when_necessary(self):
+        self.client.get("/")
+        self.assertEqual(Item.objects.count(),0)
         
 class ItemModelTest(TestCase):
     def test_saving_and_retrieving_item(self):
