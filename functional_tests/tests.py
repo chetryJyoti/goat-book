@@ -82,7 +82,7 @@ class NewVisitorTest(LiveServerTestCase):
         # # When she hit enter, the page updates, and now the page lists
         # # "1: Buy peacock featers" as an item in a to-do list
         inputbox.send_keys(Keys.ENTER)
-        # time.sleep(1)
+        time.sleep(1)
         
         
         # # There is still a text box inviting her to add another item.
@@ -96,7 +96,45 @@ class NewVisitorTest(LiveServerTestCase):
         self.wait_for_row_in_list_table("1: Buy peacock feathers")
         self.wait_for_row_in_list_table("2: Use peacock feathers to make a fly")
         
+    
+    def test_multiple_users_can_start_lists_at_different_urls(self):
+        # Edith starts a new 
+        self.browser.get(self.live_server_url)
+        inputbox = self.browser.find_element(By.ID,"id_new_item")
+        inputbox.send_keys("Buy peacock feathers")
+        inputbox.send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table("1: Buy peacock feathers")
+
+        # She notices that her list has a unique URL
+        edith_list_url = self.browser.current_url
+        self.assertRegex(edith_list_url,"/lists/.+")
+        
+        # new user comes in
+        self.browser.delete_all_cookies()
+
+        # visists the home page
+        self.browser.get(self.live_server_url)
+        page_text = self.browser.find_element(By.TAG_NAME,"body").text
+        self.assertNotIn("Buy peacock feathers",page_text)
+        self.assertNotIn("make a fly",page_text)
+
+        # enters new item
+        inputbox = self.browser.find_element(By.ID,"id_new_item")
+        inputbox.send_keys("Buy milk")
+        inputbox.send_keys(Keys.ENTER)
+        # time.sleep(1)
+        self.wait_for_row_in_list_table("1: Buy milk")
+        
         
 
-# if __name__ == "__main__":
-#      unittest.main()
+        # gets his own unique url
+        unique_url = self.browser.current_url
+        self.assertRegex(unique_url,"/lists/.+")
+        self.assertNotEqual(unique_url,edith_list_url)
+
+        # check if there any trace of Edith's list
+        page_text = self.browser.find_element(By.TAG_NAME,"body").text
+        self.assertNotIn("Buy peacock feathers",page_text)
+        self.assertNotIn("Buy milk",page_text)
+        
+        
