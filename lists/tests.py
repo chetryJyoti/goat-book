@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.http import HttpRequest
 from lists.views import home_page
-from lists.models import Item
+from lists.models import Item,List
 
 # Good unit testing practice says that each test should only test one thing
 class HomePageTest(TestCase):
@@ -13,23 +13,33 @@ class HomePageTest(TestCase):
         self.client.get("/")
         self.assertEqual(Item.objects.count(),0)
         
-class ItemModelTest(TestCase):
+class ListAndItemModelTest(TestCase):
     def test_saving_and_retrieving_item(self):
+        myList = List()
+        myList.save()
         first_item = Item()
         first_item.text = "The first (ever) list item"
+        first_item.list = myList
         first_item.save()
 
         second_item = Item()
         second_item.text = "Item the second"
+        second_item.list = myList
         second_item.save()
-
+        
+        saved_list= List.objects.get()
+        self.assertEqual(saved_list,myList)
+        
+        
         saved_items = Item.objects.all()
         self.assertEqual(saved_items.count(),2)
         
         first_saved_item = saved_items[0]
         second_saved_item = saved_items[1]
         self.assertEqual(first_saved_item.text,"The first (ever) list item")
+        self.assertEqual(first_saved_item.list,myList)
         self.assertEqual(second_saved_item.text,"Item the second")
+        self.assertEqual(second_saved_item.list,myList)
 
 class ListViewTest(TestCase):
     def test_uses_list_template(self):
@@ -37,8 +47,9 @@ class ListViewTest(TestCase):
         self.assertTemplateUsed(response,'list.html')
         
     def test_displays_all_list_items(self):
-        Item.objects.create(text="item111")
-        Item.objects.create(text="item222")
+        mylist = List.objects.create()
+        Item.objects.create(text="item111",list=mylist)
+        Item.objects.create(text="item222",list=mylist)
         response = self.client.get("/lists/the-only-list-in-the-world/")
         self.assertContains(response,"item111")
         self.assertContains(response,"item222")
