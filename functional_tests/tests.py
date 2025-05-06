@@ -1,3 +1,4 @@
+import os
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -13,6 +14,11 @@ class NewVisitorTest(StaticLiveServerTestCase):
     
     def setUp(self):
         self.browser = webdriver.Firefox()
+        test_server = os.environ.get("TEST_SERVER")
+        # print(test_server)
+        # on mac command is : env TEST_SERVER=localhost:8888 ./manage.py test functional_tests --failfast
+        if test_server:
+            self.live_server_url = "http://" + test_server
         
     def tearDown(self):
         self.browser.quit()
