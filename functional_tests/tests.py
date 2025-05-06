@@ -1,33 +1,3 @@
-# from selenium import webdriver
-# browser = webdriver.Firefox()
-
-# # Edith has heard about a cool new online to-do app
-# # She goes to check out its home page
-# browser.get("http://localhost:8000")
-
-# # She notices the page title and header mentioned to-do lists
-# assert "To-do" in browser.title
-
-# # She is invited to enter a to-do ite straight away
-
-# # She types "Buy peacock feathers" into a text box
-# # (Edith's hobby is tying fly-fishing lures)
-
-# # When she hit enter, the page updates, and now the page lists
-# # "1: Buy peacock featers" as an item in a to-do list
-
-# # There is still a text box inviting her to add another item.
-# # She enters "Use peacock feathers to make a fly"
-
-# # This page updates again, and now shows both items on her list
-
-# # Satisfied, she goes back to sleep
-
-# browser.quit()
-
-
-# using unittest
-import unittest
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
@@ -82,19 +52,19 @@ class NewVisitorTest(LiveServerTestCase):
         # # When she hit enter, the page updates, and now the page lists
         # # "1: Buy peacock featers" as an item in a to-do list
         inputbox.send_keys(Keys.ENTER)
-        time.sleep(1)
-        
+        # time.sleep(1)
+        self.wait_for_row_in_list_table("1: Buy peacock feathers")
         
         # # There is still a text box inviting her to add another item.
         # # She enters "Use peacock feathers to make a fly"
         inputbox = self.browser.find_element(By.ID,'id_new_item')
         inputbox.send_keys("Use peacock feathers to make a fly")
         inputbox.send_keys(Keys.ENTER)
-      
+        # time.sleep(1)
         # # This page updates again, and now shows both items on her list
         
-        self.wait_for_row_in_list_table("1: Buy peacock feathers")
         self.wait_for_row_in_list_table("2: Use peacock feathers to make a fly")
+        self.wait_for_row_in_list_table("1: Buy peacock feathers")
         
     
     def test_multiple_users_can_start_lists_at_different_urls(self):
@@ -135,6 +105,6 @@ class NewVisitorTest(LiveServerTestCase):
         # check if there any trace of Edith's list
         page_text = self.browser.find_element(By.TAG_NAME,"body").text
         self.assertNotIn("Buy peacock feathers",page_text)
-        self.assertNotIn("Buy milk",page_text)
+        self.assertIn("Buy milk",page_text)
         
         
