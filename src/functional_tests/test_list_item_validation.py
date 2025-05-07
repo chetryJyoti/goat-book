@@ -13,7 +13,7 @@ class ItemValidationTest(FunctionalTest):
         self.browser.get(self.live_server_url)
         self.browser.find_element(By.ID,"id_new_item").send_keys(Keys.ENTER)
         
-        return # Todo : re-enable the rest of this test
+        # return # Todo : re-enable the rest of this test
         # page refreshes
         # gets warning saying cannot save empty lists
         self.wait_for(
