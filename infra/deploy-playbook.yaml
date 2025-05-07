@@ -1,30 +1,94 @@
-# - hosts: all
-#   tasks: 
-#      - name: Ping to make sure we can talk to our server
-#        ansible.builtin.ping:
-
+# This playbook targets all hosts defined in your inventory, typically your server(s).
 - hosts: all
   tasks:
-    - name: Install docker
+    # Step 1: Install Docker on the server
+    - name: Install Docker
       ansible.builtin.apt:
-        name: docker.io
-        state:  latest
-        update_cache: true
-      become: true
+        name: docker.io # Install Docker
+        state: latest # Ensure the latest version is installed
+        update_cache: true # Update the apt package cache
+      become: true # Run with sudo privileges
 
-    - name: Add our user to the docker group, so we don't need sudo/become
+    # Step 2: Add the current user to the Docker group to avoid using sudo for Docker commands
+    - name: Add user to Docker group
       ansible.builtin.user:
-        name: '{{ ansible_user }}'
-        groups: docker
-      become: true
-    
-    - name: Reset ssh connection to allow the user/group change to take effect
-      ansible.builtin.meta: reset_connection
+        name: "{{ ansible_user }}" # Get the username running the playbook
+        groups: docker # Add user to the "docker" group
+      become: true # Run with sudo privileges
 
-    - name: Run test container
+    # Step 3: Reset SSH connection to apply the group change
+    - name: Reset SSH connection to apply group change
+      ansible.builtin.meta: reset_connection # Reconnect to the server
+
+    # Step 4: Build Docker image locally on your machine (not on the server)
+    - name: Build Docker image locally
+      community.docker.docker_image:
+        name: superlists # Name the Docker image
+        source: build # Build the image from source
+        state: present # Ensure the image is present
+        build:
+          path: .. # Use the project root as the build context
+          platform: linux/amd64 # Build for AMD architecture 
+        force_source: true # Rebuild the image even if it already exists
+      delegate_to: 127.0.0.1 # Run this task on your local machine
+
+    # Step 5: Export the built Docker image to a tarball file on your local machine
+    - name: Export Docker image locally
+      community.docker.docker_image:
+        name: superlists # Image to export
+        archive_path: /tmp/superlists-img.tar # Save the image as a tarball
+        source: local # Use the locally built image
+      delegate_to: 127.0.0.1 # This step also runs locally
+
+    # Step 6: Upload the image tarball to the server
+    - name: Upload Docker image to server
+      ansible.builtin.copy:
+        src: /tmp/superlists-img.tar # Local path of the image tarball
+        dest: /tmp/superlists-img.tar # Destination path on the server
+      become: true # Upload with sudo privileges
+
+    # Step 7: Import the Docker image on the server
+    - name: Import Docker image on the server
+      community.docker.docker_image:
+        name: superlists # Name of the Docker image
+        load_path: /tmp/superlists-img.tar # Path of the tarball on the server
+        source: load # Load the image from the tarball
+        force_source: true # Re-import the image if it exists
+        state: present # Ensure the image is available on the server
+      become: true # Run with sudo privileges
+
+    # Step 8: Ensure the environment file (.env) exists
+    - name: Ensure .env file exists
+      ansible.builtin.template:
+        src: env.j2
+        dest: ~/superlists.env
+        force: false
+      vars:
+        host: "{{ inventory_hostname }}"
+        secret_key: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters') }}" # Generate secret key
+
+    # Step 9: Ensure the SQLite database file exists outside the container (so it can be mounted)
+    - name: Ensure db.sqlite3 file exists
+      ansible.builtin.file:
+        path: /home/ubuntu/db.sqlite3
+        state: touch
+
+    # Step 10: Run the container from the imported image
+    - name: Run Docker container
       community.docker.docker_container:
-        name: testcontainer
-        state:  started
-        image:  busybox
-        command:  echo hello world
-      become: true
+        name: superlists # Name of the container to run
+        image: superlists # Image to use
+        state: started # Ensure the container is started
+        recreate: true # Recreate the container if it exists
+        env_file: ~/superlists.env # Use the .env file
+        mounts:
+          - type: bind
+            source: /home/ubuntu/db.sqlite3 # Mount the SQLite DB file
+            target: /src/db.sqlite3 # Path inside the container
+        ports: 80:8888 # Expose port 8888 in the container to port 80 on the host
+
+    # Step 11: Run database migrations inside the container
+    - name: Run database migrations
+      community.docker.docker_container_exec:
+        container: superlists
+        command: ./manage.py migrate # Run Django migrations
