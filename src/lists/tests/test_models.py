@@ -1,5 +1,7 @@
 from django.test import TestCase
 from lists.models import Item,List
+from django.db.utils import IntegrityError
+from django.core.exceptions import ValidationError
 
 # Good unit testing practice says that each test should only test one thing
 class ListAndItemModelTest(TestCase):
@@ -67,3 +69,15 @@ class ListAndItemModelTest(TestCase):
         )
 
         self.assertRedirects(response, f"/lists/{correct_list.id}/")
+        
+    def test_cannot_save_null_list_item(self):
+        mylist = List.objects.create()
+        item = Item(list=mylist,text=None)
+        with self.assertRaises(IntegrityError):
+            item.save()
+            
+    def test_cannot_save_empty_list_item(self):
+        mylist = List.objects.create()
+        item = Item(list=mylist,text="")
+        with self.assertRaises(ValidationError):
+            item.full_clean()
