@@ -1,42 +1,9 @@
-import os
-from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from .base import FunctionalTest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from django.test import LiveServerTestCase
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-import time
-
-MAX_WAIT = 5
-
-# As a rule of thumb, we usually only run the functional tests once all the unit tests are passing, so if in doubt, try both!
-class NewVisitorTest(StaticLiveServerTestCase):
-    
-    def setUp(self):
-        self.browser = webdriver.Firefox()
-        test_server = os.environ.get("TEST_SERVER")
-        # print(test_server)
-        # on mac command is : env TEST_SERVER=localhost:8888 ./manage.py test functional_tests --failfast
-        if test_server:
-            self.live_server_url = "http://" + test_server
-        
-    def tearDown(self):
-        self.browser.quit()
-        
-    def wait_for_row_in_list_table(self, row_text):
-            start_time = time.time()
-            while True:  
-                try:
-                    table = self.browser.find_element(By.ID, "id_list_table")  
-                    rows = table.find_elements(By.TAG_NAME, "tr")
-                    self.assertIn(row_text, [row.text for row in rows])
-                    return  
-                except (AssertionError, WebDriverException):  
-                    if time.time() - start_time > MAX_WAIT:  
-                        raise  
-                    time.sleep(0.5)  
                 
-    
+class NewVisitorTest(FunctionalTest):
+   
     def test_can_start_a_todo_list(self):
         # Edith has heard about a cool new online to-do app
         # She goes to check out its home page
@@ -73,7 +40,6 @@ class NewVisitorTest(StaticLiveServerTestCase):
         self.wait_for_row_in_list_table("2: Use peacock feathers to make a fly")
         self.wait_for_row_in_list_table("1: Buy peacock feathers")
         
-    
     def test_multiple_users_can_start_lists_at_different_urls(self):
         # Edith starts a new 
         self.browser.get(self.live_server_url)
@@ -114,32 +80,3 @@ class NewVisitorTest(StaticLiveServerTestCase):
         self.assertNotIn("Buy peacock feathers",page_text)
         self.assertIn("Buy milk",page_text)
     
-    
-    def test_layout_and_styling(self):
-        # goes to url
-        self.browser.get(self.live_server_url)
-
-        # browser window is set to very specific size
-        self.browser.set_window_size(1024,768)
-
-        # input box should be in center
-        inputbox = self.browser.find_element(By.ID,'id_new_item')
-        self.assertAlmostEqual(
-            inputbox.location['x'] + inputbox.size['width']/2,
-            512,
-            delta=10
-        )
-        
-        # starts a new list and the input box should be center here also
-        inputbox.send_keys('testing')
-        inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1: testing')
-        inputbox = self.browser.find_element(By.ID,"id_new_item")
-
-        self.assertAlmostEqual(
-            inputbox.location['x'] + inputbox.size['width']/2,
-            512,
-            delta=10
-        )
-        
-        
