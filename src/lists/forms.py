@@ -8,7 +8,7 @@ class ItemForm(forms.models.ModelForm):
         model = Item
         fields = ("text",)
         widgets = {
-            "text":forms.widgets.Textarea(
+            "text":forms.widgets.TextInput(
                 attrs={
                     "placeholder":"Enter a to-do item",
                     "class":"form-control form-control-lg"
