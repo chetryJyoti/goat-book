@@ -4,33 +4,17 @@ from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 
 # Good unit testing practice says that each test should only test one thing
-class ListAndItemModelTest(TestCase):
-    def test_saving_and_retrieving_item(self):
-        myList = List()
-        myList.save()
-        first_item = Item()
-        first_item.text = "The first (ever) list item"
-        first_item.list = myList
-        first_item.save()
+class ItemModelTest(TestCase):
+    def test_default_text(self):
+        item = Item()
+        self.assertEqual(item.text, "")
 
-        second_item = Item()
-        second_item.text = "Item the second"
-        second_item.list = myList
-        second_item.save()
-        
-        saved_list= List.objects.get()
-        self.assertEqual(saved_list,myList)
-        
-        
-        saved_items = Item.objects.all()
-        self.assertEqual(saved_items.count(),2)
-        
-        first_saved_item = saved_items[0]
-        second_saved_item = saved_items[1]
-        self.assertEqual(first_saved_item.text,"The first (ever) list item")
-        self.assertEqual(first_saved_item.list,myList)
-        self.assertEqual(second_saved_item.text,"Item the second")
-        self.assertEqual(second_saved_item.list,myList)
+    def test_item_is_related_to_list(self):
+        mylist = List.objects.create()
+        item = Item()
+        item.list = mylist
+        item.save()
+        self.assertIn(item, mylist.item_set.all())
 
     
     def test_can_save_a_POST_request(self):
@@ -57,6 +41,24 @@ class ListAndItemModelTest(TestCase):
         with self.assertRaises(ValidationError):
             item.full_clean()
     
+   
+
+class ListModelTest(TestCase):
+    
     def test_get_absolute_url(self):
         mylist = List.objects.create()
         self.assertEqual(mylist.get_absolute_url(),f"/lists/{mylist.id}/")
+        
+    def test_duplicate_items_are_invalid(self):
+        mylist = List.objects.create()
+        Item.objects.create(list=mylist,text="abc")
+        with self.assertRaises(ValidationError):
+            item = Item(list=mylist,text="abc")
+            item.full_clean()
+            
+    def test_CAN_save_same_item_to_different_lists(self):
+        list1 = List.objects.create()
+        list2 = List.objects.create()
+        Item.objects.create(list=list1,text="hello")
+        item = Item(list=list2,text="hello")
+        item.full_clean() # should not raise
