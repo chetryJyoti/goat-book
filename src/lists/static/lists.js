@@ -1,7 +1,6 @@
-const initialize = (inputSelector,errorSelector) => {
-  const textInput = document.querySelector(inputSelector);
-  textInput.oninput = () => {
-    const errorMsg = document.querySelector(errorSelector);
-    errorMsg.style.display = "none";
+const initialize = (inputSelector) => {
+    const textInput = document.querySelector(inputSelector);
+    textInput.oninput = () => {
+      textInput.classList.remove("is-invalid");
+    };
   };
-};
