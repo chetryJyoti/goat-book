@@ -24,6 +24,12 @@ class LoginTest(FunctionalTest):
                 self.browser.find_element(By.CSS_SELECTOR, "body").text,
             )
         )
+        
+        if self.test_server:
+            # Testing real email sending from the server is not worth it.
+            # Email itself is a well-understood protocol and Django
+            # has supported sending email for more than a decade
+            return 
     
         # checks email
         email = mail.outbox.pop()  

@@ -13,15 +13,13 @@ MAX_WAIT = 5
 
 class FunctionalTest(StaticLiveServerTestCase):
     
-    
-    
     def setUp(self):
         self.browser = webdriver.Firefox()
-        test_server = os.environ.get("TEST_SERVER")
+        self.test_server = os.environ.get("TEST_SERVER")
         # print(test_server)
         # on mac command is : env TEST_SERVER=localhost:8888 ./manage.py test functional_tests --failfast
-        if test_server:
-            self.live_server_url = "http://" + test_server
+        if self.test_server:
+            self.live_server_url = "http://" + self.test_server
         
     def tearDown(self):
         self.browser.quit()
