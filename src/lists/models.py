@@ -3,6 +3,9 @@ from django.urls import reverse
 from django.conf import settings
 
 class List(models.Model):
+    @property
+    def name(self):
+        return self.item_set.first().text
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="lists",
