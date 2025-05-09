@@ -92,3 +92,87 @@
       community.docker.docker_container_exec:
         container: superlists
         command: ./manage.py migrate # Run Django migrations
+
+
+# To build the docker image in server itself
+
+# - hosts: all
+#   tasks:
+#     # Step 1: Install Docker
+#     - name: Install Docker
+#       ansible.builtin.apt:
+#         name: docker.io
+#         state: latest
+#         update_cache: true
+#       become: true
+
+#     # Step 2: Add user to Docker group
+#     - name: Add user to Docker group
+#       ansible.builtin.user:
+#         name: "{{ ansible_user }}"
+#         groups: docker
+#         append: yes
+#       become: true
+
+#     # Step 3: Reset SSH connection to apply group change
+#     - name: Reset SSH connection
+#       ansible.builtin.meta: reset_connection
+
+#     # Step 4: Upload project files to server
+#     - name: Upload Django project code
+#       ansible.builtin.copy:
+#         src: ../src   # Adjust to point to your Django project root
+#         dest: /home/ubuntu/app/
+#         mode: preserve
+#       become: true
+
+#     # Step 5: Build Docker image on the server
+#     - name: Build Docker image on the server
+#       community.docker.docker_image:
+#         name: superlists
+#         source: build
+#         state: present
+#         build:
+#           path: /home/ubuntu/app
+#           pull: true
+#       become: true
+
+#     # Step 6: Ensure .env file exists on server
+#     - name: Ensure .env file exists
+#       ansible.builtin.template:
+#         src: env.j2
+#         dest: /home/ubuntu/superlists.env
+#         force: false
+#       vars:
+#         host: "{{ inventory_hostname }}"
+#         secret_key: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters') }}"
+
+#     # Step 7: Ensure db.sqlite3 file exists
+#     - name: Ensure db.sqlite3 file exists
+#       ansible.builtin.file:
+#         path: /home/ubuntu/db.sqlite3
+#         state: touch
+#       become: true
+
+#     # Step 8: Run Docker container
+#     - name: Run Docker container
+#       community.docker.docker_container:
+#         name: superlists
+#         image: superlists
+#         state: started
+#         recreate: true
+#         env_file: /home/ubuntu/superlists.env
+#         mounts:
+#           - type: bind
+#             source: /home/ubuntu/db.sqlite3
+#             target: /src/db.sqlite3
+#         ports:
+#           - "80:8888"
+#       become: true
+
+#     # Step 9: Run Django migrations inside the container
+#     - name: Run Django migrations
+#       community.docker.docker_container_exec:
+#         container: superlists
+#         command: ./manage.py migrate
+#       become: true
