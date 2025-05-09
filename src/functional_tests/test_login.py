@@ -3,10 +3,13 @@ from .base import FunctionalTest
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from django.core import mail
+from unittest import skip
 
 TEST_EMAIL = 'jyotichetry087@gmail.com'
-SUBJECT = "Login link for superlists"
+SUBJECT = "Your login link for Superlists"
 
+# todo : remove skip
+# @skip
 class LoginTest(FunctionalTest):
     def test_login_uses_magic_link(self):
         self.browser.get(self.live_server_url)

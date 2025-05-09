@@ -5,3 +5,4 @@ __pycache__/
 src/db.sqlite3
 src/static
 goat-book-sk.pem
+.env
