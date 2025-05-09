@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from selenium.webdriver.common.keys import Keys
 
 MAX_WAIT = 5
 
@@ -27,6 +28,13 @@ class FunctionalTest(StaticLiveServerTestCase):
         
     def get_item_input_box(self):
         return self.browser.find_element(By.ID,"id_text")
+    
+    def add_list_item(self, item_text):
+        num_rows = len(self.browser.find_elements(By.CSS_SELECTOR, "#id_list_table tr"))
+        self.get_item_input_box().send_keys(item_text)
+        self.get_item_input_box().send_keys(Keys.ENTER)
+        item_number = num_rows + 1
+        self.wait_for_row_in_list_table(f"{item_number}: {item_text}")
         
     def wait(fn):
         def modified_fn(*args,**kwargs):
