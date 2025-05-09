@@ -11,26 +11,35 @@
         <div class="container-fluid">
           <a class="navbar-brand" href="/">Superlists</a>
           {% if user.email %}
-            <span class="navbar-text">Logged in as {{ user.email }}</span>
-            <form method="POST" action="{% url 'logout' %}">
-              {% csrf_token %}
-              <button id="id_logout" class="btn btn-outline-secondary" type="submit">Log out</button>
-            </form>
+          <a class="navbar-link" href="{% url 'my_lists' user.email %}"
+            >My lists</a
+          >
+          <span class="navbar-text">Logged in as {{ user.email }}</span>
+          <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button
+              id="id_logout"
+              class="btn btn-outline-secondary"
+              type="submit"
+            >
+              Log out
+            </button>
+          </form>
           {% else %}
-            <form method="POST" action="{% url 'send_login_email' %}">
-              <div class="input-group">
-                <label class="navbar-text me-2" for="id_email_input">
-                  Enter your email to log in
-                </label>
-                <input
-                  id="id_email_input"
-                  name="email"
-                  class="form-control"
-                  placeholder="your@email.com"
-                />
-                {% csrf_token %}
-              </div>
-            </form>
+          <form method="POST" action="{% url 'send_login_email' %}">
+            <div class="input-group">
+              <label class="navbar-text me-2" for="id_email_input">
+                Enter your email to log in
+              </label>
+              <input
+                id="id_email_input"
+                name="email"
+                class="form-control"
+                placeholder="your@email.com"
+              />
+              {% csrf_token %}
+            </div>
+          </form>
           {% endif %}
         </div>
       </nav>
@@ -49,7 +58,7 @@
         <div class="col-lg-8 text-center">
           <h1 class="display-1 mb-4">{% block header_text %}{% endblock %}</h1>
 
-          <form method="POST" action="{% block form_action %}{% endblock %}">
+          <!-- <form method="POST" action="{% block form_action %}{% endblock %}">
             <input
               class="form-control form-control-lg {% if form.errors %} is-invalid {% endif %}"
               name="text"
@@ -64,19 +73,22 @@
               {{ form.errors.text.0 }}
             </div>
             {% endif %}
-          </form>
+          </form> -->
+          {% block extra_header %} {% endblock %}
         </div>
       </div>
 
-      <div class="row justify-content-center">
+      <!-- <div class="row justify-content-center">
         <div class="col-lg-6">{% block table %} {% endblock %}</div>
-      </div>
+      </div> -->
+      {% block content %} {% endblock %}
     </div>
   </body>
-  <script src="/static/lists.js"></script>
+  {% block scripts %} {% endblock %}
+  <!-- <script src="/static/lists.js"></script>
   <script>
     window.onload = () => {
       initialize("#id_text");
     };
-  </script>
+  </script> -->
 </html>
