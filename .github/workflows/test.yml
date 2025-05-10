@@ -54,4 +54,4 @@ jobs:
       - name: Run all functional tests
         run: |
           cd src
-          python manage.py test
+          python src/manage.py test
