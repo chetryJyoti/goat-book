@@ -53,4 +53,4 @@ jobs:
 
       - name: Run all functional tests
         run: |
-          .venv/bin/python src/manage.py test
+          .venv/bin/python src/manage.py test functional_tests
