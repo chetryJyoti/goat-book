@@ -47,8 +47,9 @@ jobs:
         run: |
           python src/manage.py test lists accounts
 
-      - name: Install selenium for functional tests
+      - name: Install Firefox and Selenium for functional tests
         run: |
+          apt update -y && apt install -y firefox-esr 
           pip install selenium
 
       - name: Run all functional tests
