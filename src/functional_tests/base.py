@@ -5,6 +5,7 @@ from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 from .container_commands import reset_database
 
 MAX_WAIT = 5
@@ -15,7 +16,9 @@ MAX_WAIT = 5
 class FunctionalTest(StaticLiveServerTestCase):
     
     def setUp(self):
-        self.browser = webdriver.Firefox()
+        options = Options()
+        options.add_argument("-headless") 
+        self.browser = webdriver.Firefox(options=options)
         self.test_server = os.environ.get("TEST_SERVER")
         # print(test_server)
         # on mac command is : env TEST_SERVER=localhost:8888 ./manage.py test functional_tests --failfast
