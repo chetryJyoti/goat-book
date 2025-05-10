@@ -20,17 +20,17 @@
     - name: Reset SSH connection to apply group change
       ansible.builtin.meta: reset_connection # Reconnect to the server
 
-    # Step 4: Build Docker image locally on your machine (not on the server)
-    - name: Build Docker image locally
-      community.docker.docker_image:
-        name: superlists # Name the Docker image
-        source: build # Build the image from source
-        state: present # Ensure the image is present
-        build:
-          path: .. # Use the project root as the build context
-          platform: linux/amd64 # Build for AMD architecture 
-        force_source: true # Rebuild the image even if it already exists
-      delegate_to: 127.0.0.1 # Run this task on your local machine
+    # Step 4: Build Docker image locally using BuildX
+    - name: Build Docker image locally with BuildX
+      ansible.builtin.shell: >
+        docker buildx build
+        --platform linux/amd64
+        --tag superlists
+        --load
+        ..
+      delegate_to: 127.0.0.1
+      register: build_result
+      changed_when: build_result.rc == 0
 
     # Step 5: Export the built Docker image to a tarball file on your local machine
     - name: Export Docker image locally
@@ -62,7 +62,7 @@
       ansible.builtin.template:
         src: env.j2
         dest: ~/superlists.env
-        force: false
+        force: true # even if it exists update it
       vars:
         host: "{{ inventory_hostname }}"
         secret_key: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters') }}" # Generate secret key
