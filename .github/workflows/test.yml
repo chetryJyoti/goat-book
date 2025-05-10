@@ -15,6 +15,7 @@ jobs:
     env:
       PIP_CACHE_DIR: .cache/pip
       DEBIAN_FRONTEND: noninteractive
+      MOZ_HEADLESS: "1"
 
     steps:
       - name: Checkout code
