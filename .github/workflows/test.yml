@@ -43,12 +43,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          source .venv/bin/activate
+          . .venv/bin/activate
           pip install -r requirements.txt
 
       - name: Run unit tests
         run: |
-          source .venv/bin/activate
+          . .venv/bin/activate
           python src/manage.py test lists accounts
 
       - name: Install Firefox and Selenium for functional tests
@@ -62,10 +62,10 @@ jobs:
           chmod +x geckodriver
           mv geckodriver /usr/local/bin/
           
-          source .venv/bin/activate
+          . .venv/bin/activate
           pip install selenium
 
       - name: Run functional tests
         run: |
-          source .venv/bin/activate
+          . .venv/bin/activate
           python src/manage.py test functional_tests
