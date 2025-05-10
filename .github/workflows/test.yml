@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: python:slim
+
+    env:
+      PIP_CACHE_DIR: .cache/pip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: .cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Show versions
+        run: |
+          python --version
+          pip --version
+
+      - name: Set up virtualenv
+        run: |
+          pip install virtualenv
+          virtualenv .venv
+          source .venv/bin/activate
+          echo "source .venv/bin/activate" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: |
+          source .venv/bin/activate
+          python src/manage.py test lists accounts
+
+      - name: Install selenium for functional tests
+        run: |
+          source .venv/bin/activate
+          pip install selenium
+
+      - name: Run all functional tests
+        run: |
+          source .venv/bin/activate
+          cd src && python manage.py test
