@@ -54,14 +54,8 @@ jobs:
       - name: Install Firefox and Selenium for functional tests
         run: |
           apt-get update -y
-          apt-get install -y firefox-esr wget gnupg
-          
-          # Install geckodriver
-          wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz
-          tar -xzf geckodriver-v0.33.0-linux64.tar.gz
-          chmod +x geckodriver
-          mv geckodriver /usr/local/bin/
-          
+          apt-get install -y firefox-esr 
+        
           . .venv/bin/activate
           pip install selenium
 
