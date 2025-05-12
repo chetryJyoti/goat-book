@@ -4,9 +4,11 @@ from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.conf import settings
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
-from .container_commands import reset_database
+from .container_commands import reset_database,create_session_on_server
+from .management.commands.create_session import create_pre_authenticated_session
 
 MAX_WAIT = 5
 
@@ -71,3 +73,25 @@ class FunctionalTest(StaticLiveServerTestCase):
         self.browser.find_element(By.CSS_SELECTOR, "input[name=email]")
         navbar = self.browser.find_element(By.CSS_SELECTOR, ".navbar")
         self.assertNotIn(email, navbar.text)
+        
+        
+    def create_pre_authenticated_session(self, email):
+        # user = User.objects.create(email=email)
+        # session = SessionStore()
+        # session[SESSION_KEY] = user.pk 
+        # session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[0]
+        # session.save()
+        if self.test_server:
+            session_key = create_session_on_server(self.test_server, email)
+        else:
+            session_key = create_pre_authenticated_session(email)
+        ## to set a cookie we need to first visit the domain.
+        ## 404 pages load the quickest!
+        self.browser.get(self.live_server_url + "/404_no_such_url/")
+        self.browser.add_cookie(
+            dict(
+                name=settings.SESSION_COOKIE_NAME,
+                value=session_key,  
+                path="/",
+            )
+        )
