@@ -12,6 +12,19 @@ from .management.commands.create_session import create_pre_authenticated_session
 
 MAX_WAIT = 5
 
+
+def wait(fn):
+        def modified_fn(*args,**kwargs):
+            start_time = time.time()
+            while True:  
+                try:
+                    return fn(*args,**kwargs)
+                except (AssertionError, WebDriverException) as e:  
+                    if time.time() - start_time > MAX_WAIT:  
+                        raise e
+                    time.sleep(0.5)  
+        return modified_fn    
+
 # As a rule of thumb, we usually only run the functional tests once all the unit tests are passing, 
 # so if in doubt, try both!
 
@@ -41,17 +54,7 @@ class FunctionalTest(StaticLiveServerTestCase):
         item_number = num_rows + 1
         self.wait_for_row_in_list_table(f"{item_number}: {item_text}")
         
-    def wait(fn):
-        def modified_fn(*args,**kwargs):
-            start_time = time.time()
-            while True:  
-                try:
-                    return fn(*args,**kwargs)
-                except (AssertionError, WebDriverException) as e:  
-                    if time.time() - start_time > MAX_WAIT:  
-                        raise e
-                    time.sleep(0.5)  
-        return modified_fn    
+
     
     @wait
     def wait_for(self,fn):
