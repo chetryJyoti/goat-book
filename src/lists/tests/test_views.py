@@ -1,6 +1,7 @@
 from django.test import TestCase
 from lists.models import Item,List
 from django.utils.html import escape
+from django.urls import reverse
 from lists.forms import (
     DUPLICATE_ITEM_ERROR,
     EMPTY_ITEM_ERROR,
@@ -166,3 +167,27 @@ class MyListsTest(TestCase):
         correct_user = User.objects.create(email="a@b.com")
         response = self.client.get("/lists/users/a@b.com/")
         self.assertEqual(response.context["owner"], correct_user)
+        
+        
+class ShareListViewTest(TestCase):
+    def test_POST_redirects_after_sharing(self):
+        owner = User.objects.create(email='owner@example.com')
+        sharee = User.objects.create(email='sharee@example.com')
+        list_ = List.objects.create(owner=owner)
+
+        response = self.client.post(
+            f'/lists/{list_.id}/share/',
+            data={'sharee': 'sharee@example.com'}
+        )
+
+        self.assertRedirects(response, f'/lists/{list_.id}/')
+    
+    def test_adds_user_to_shared_with_list(self):
+        owner = User.objects.create(email='owner@example.com')
+        sharee = User.objects.create(email='sharee@example.com')
+        list_ = List.objects.create(owner=owner)
+
+        self.client.post(f'/lists/{list_.id}/share/', data={'sharee': 'sharee@example.com'})
+        
+        self.assertIn(sharee, list_.shared_with.all())
+        
