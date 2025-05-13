@@ -191,3 +191,16 @@ class ShareListViewTest(TestCase):
         
         self.assertIn(sharee, list_.shared_with.all())
         
+
+    def test_saves_created_by_user_on_item_if_user_logged_in(self):
+        user = User.objects.create(email='edith@example.com')
+        self.client.force_login(user)
+
+        list_ = List.objects.create()
+        self.client.post(
+            reverse('view_list', args=[list_.id]),
+            data={'text': 'A new shared item'}
+        )
+
+        item = Item.objects.get(text='A new shared item')
+        self.assertEqual(item.created_by, user)

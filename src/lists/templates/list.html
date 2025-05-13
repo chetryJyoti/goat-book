@@ -12,8 +12,16 @@
   <div class="col-lg-6">
     <table class="table" id="id_list_table">
       {% for item in list.item_set.all %}
-        <tr><td>{{ forloop.counter }}: {{ item.text }}</td></tr>
-      {% endfor %}
+      <tr>
+        <td>
+          {{ forloop.counter }}: {{ item.text }}
+          {% if item.created_by %}
+            <small class="text-muted"> — added by {{ item.created_by.email }}</small>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    
     </table>
 
     

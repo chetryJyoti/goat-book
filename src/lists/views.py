@@ -24,17 +24,19 @@ def new_list(request):
         return render(request,"home.html",{"form":form})
 
 
-def view_list(request,list_id):
+def view_list(request, list_id):
     our_list = List.objects.get(id=list_id)
     if request.method == "POST":
-        form = ExistingListItemForm(for_list=our_list,data=request.POST)
+        form = ExistingListItemForm(for_list=our_list, data=request.POST)
         if form.is_valid():
-            # Item.objects.create(text=request.POST['text'],list=our_list)
-            form.save()
+            item = form.save(commit=False)
+            item.created_by = request.user if request.user.is_authenticated else None
+            item.save()
             return redirect(our_list)
     else:
         form = ExistingListItemForm(for_list=our_list)
-    return render(request,"list.html",{"list":our_list,"form":form})
+    return render(request, "list.html", {"list": our_list, "form": form})
+
 
 def my_lists(request,email):
     owner = User.objects.get(email=email)

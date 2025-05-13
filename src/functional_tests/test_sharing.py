@@ -11,7 +11,6 @@ def quit_if_possible(browser):
     except:
         pass
 
-
 class SharingTest(FunctionalTest):
     def test_can_share_a_list_with_another_user(self):
         # Edith is a logged-in user
@@ -19,16 +18,9 @@ class SharingTest(FunctionalTest):
         edith_browser = self.browser
         self.addCleanup(lambda: quit_if_possible(edith_browser))
 
-        # Her friend Onesiphorus is also hanging out on the lists site
-        oni_browser = webdriver.Firefox()
-        self.addCleanup(lambda: quit_if_possible(oni_browser))
-        self.browser = oni_browser
-        self.create_pre_authenticated_session("onesiphorus@example.com")
-    
         # Edith goes to the home page and starts a list
         self.browser = edith_browser
         self.browser.get(self.live_server_url)
-        # self.add_list_item("Get help")
         list_page = ListPage(self).add_list_item("Get help")
 
         # She notices a "Share this list" option
@@ -37,19 +29,22 @@ class SharingTest(FunctionalTest):
             share_box.get_attribute("placeholder"),
             "your-friend@example.com",
         )
-        # shares her list
-        # The page updates to say that it's shared with Onesiphorus:
+        # shares her list with Onesiphorus
         list_page.share_list_with('onesiphorus@example.com')
         
-        # now Onesiphorus goes to his browser 
-        self.browser = oni_browser
+        # Now we simulate Onesiphorus browsing the site in the same test run (using a different session)
+        # Simulate Onesiphorus as if it's another browser session
+        self.browser = webdriver.Firefox()
+        self.addCleanup(lambda: quit_if_possible(self.browser))
+        self.create_pre_authenticated_session("onesiphorus@example.com")
+    
+        # Onesiphorus goes to his browser and visits the "My Lists" page
         MyListsPage(self).go_to_my_lists_page('onesiphorus@example.com')
 
-        # sees Edith lists in there
-        self.browser.find_element(By.LINK_TEXT,'Get help').click()
-        
-        
-        # On the list page, Onesiphorus can see says that it's Edith's list
+        # He sees Edith's list in his "My Lists"
+        self.browser.find_element(By.LINK_TEXT, 'Get help').click()
+
+        # On the list page, Onesiphorus sees that it's Edith's list
         self.wait_for(
             lambda: self.assertEqual(list_page.get_list_owner(), "edith@example.com")
         )
@@ -57,7 +52,18 @@ class SharingTest(FunctionalTest):
         # He adds an item to the list
         list_page.add_list_item("Hi Edith!")
 
+        # Now we check if Onesiphorus's email is next to the item he added
+        self.wait_for(
+            lambda: self.assertIn(
+                "onesiphorus@example.com", [row.text for row in list_page.get_table_rows()]
+            )
+        )
+
         # When Edith refreshes the page, she sees Onesiphorus's addition
         self.browser = edith_browser
         self.browser.refresh()
         list_page.wait_for_row_in_list_table("Hi Edith!", 2)
+
+        # Clean up both browser sessions
+        quit_if_possible(edith_browser)
+        quit_if_possible(self.browser)
