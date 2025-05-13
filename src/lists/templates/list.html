@@ -1,5 +1,6 @@
 {% extends 'base.html' %} 
-{% block header_text %} Your To-Do lists {% endblock%}
+
+{% block header_text %} Your To-Do lists {% endblock %}
 
 {% block extra_header %}  
   {% url 'view_list' list.id as form_action %}
@@ -9,34 +10,48 @@
 {% block content %}  
 <div class="row justify-content-center">
   <div class="col-lg-6">
-     <table class="table" id="id_list_table">
-       {% for item in list.item_set.all %}
-         <tr><td>{{ forloop.counter }}: {{ item.text }}</td></tr>
-       {% endfor %}
-     </table>
+    <table class="table" id="id_list_table">
+      {% for item in list.item_set.all %}
+      <tr>
+        <td>
+          {{ forloop.counter }}: {{ item.text }}
+          {% if item.created_by %}
+            <small class="text-muted"> — added by {{ item.created_by.email }}</small>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    
+    </table>
+
+    
+    {% if user.is_authenticated and list.owner == user %}
+      <form method="POST" action="{% url 'share_list' list.id %}">
+        {% csrf_token %}
+        <input name="sharee" type="email" placeholder="your-friend@example.com" />
+        <button type="submit">Share</button>
+      </form>
+    {% endif %}
+
+
+    {% if list.shared_with.all and list.owner == user %}
+      <div id="id_shared_with">
+        <p>Shared with:</p>
+        <ul>
+          {% for user in list.shared_with.all %}
+            <li class="list-sharee">{{ user.email }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if user.is_authenticated and list.owner != user %}
+      <p>List owner: <strong id="id_list_owner"> {{list.owner.email}}</strong></p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}  
   {% include "scripts.html" %}
- {% endblock %}
-<!-- 
-
-<html>
-  <head>
-    <title>To-Do lists</title>
-  </head>
-  <body>
-    <h1>Your To-Do list</h1>
-    <form method="POST" action="/lists/{ list.id }/add_item">
-      <input name="item_text" id="id_new_item" placeholder="Enter a to-do item"/>
-      {% csrf_token %}
-    </form>
-    <table id="id_list_table">
-      {% for item in list.item_set.all %}
-      <tr><td>{{forloop.counter}}: {{item.text}}</td></tr>
-      {% endfor %}
-    </table>
-  </body>
-</html> -->
+{% endblock %}

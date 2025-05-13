@@ -6,3 +6,5 @@ src/db.sqlite3
 src/static
 goat-book-sk.pem
 .env
+src/htmlcov
+src/.coverage

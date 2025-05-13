@@ -19,9 +19,10 @@ class ItemForm(forms.models.ModelForm):
         }
         error_messages = {"text": {"required": EMPTY_ITEM_ERROR}}
         
-    def save(self, for_list):
+    def save(self, for_list=None, commit=True):
+        if for_list:
             self.instance.list = for_list
-            return super().save()
+        return super().save(commit=commit)
 
 class ExistingListItemForm(ItemForm):
     
@@ -36,6 +37,6 @@ class ExistingListItemForm(ItemForm):
             e.error_dict= {'text':[DUPLICATE_ITEM_ERROR]}
             self._update_errors(e)
             
-    def save(self):
-        return forms.models.ModelForm.save(self)
+    def save(self, commit=True):
+        return super().save(commit=commit)
             
